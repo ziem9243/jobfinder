@@ -85,8 +85,9 @@
                     <label for="distance" class="form-label">Distance (km)</label>
                     <input type="number" id="distance" name="distance" class="form-control"
                            value="{{ distance }}">
-                    <input type="hidden" id="lat" name="lat">
-                    <input type="hidden" id="lon" name="lon">
+                    <!-- ✅ ensure hidden fields don't render as 'None' -->
+                    <input type="hidden" id="lat" name="lat" value="{{ user_lat|default_if_none:'' }}">
+                    <input type="hidden" id="lon" name="lon" value="{{ user_lon|default_if_none:'' }}">
                 </div>
 
                 <!-- View Mode -->
@@ -154,12 +155,32 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+    const form = document.querySelector("form");
+
+    // Request location ASAP
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
             document.getElementById("lat").value = position.coords.latitude;
             document.getElementById("lon").value = position.coords.longitude;
+            console.log("Geolocation loaded:", position.coords.latitude, position.coords.longitude);
         });
     }
+
+    // Ensure lat/lon are set before submitting
+    form.addEventListener("submit", function(e) {
+        if (!document.getElementById("lat").value || !document.getElementById("lon").value) {
+            e.preventDefault();
+            console.log("Waiting for geolocation...");
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    document.getElementById("lat").value = position.coords.latitude;
+                    document.getElementById("lon").value = position.coords.longitude;
+                    console.log("Now submitting with:", position.coords.latitude, position.coords.longitude);
+                    form.submit();
+                });
+            }
+        }
+    });
 
     {% if view_mode == "map" %}
         var map = L.map('map').setView([{{ user_lat|default:"37.7749" }}, {{ user_lon|default:"-122.4194" }}], 4);
@@ -169,16 +190,21 @@ document.addEventListener("DOMContentLoaded", function() {
         }).addTo(map);
 
         {% if user_lat and user_lon %}
-            L.marker([{{ user_lat }}, {{ user_lon }}], {icon: L.icon({iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64113.png', iconSize:[30,30]})})
-                .addTo(map)
-                .bindPopup("<b>You are here</b>");
+            L.marker([{{ user_lat }}, {{ user_lon }}], {
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64113.png',
+                    iconSize:[30,30]
+                })
+            })
+            .addTo(map)
+            .bindPopup("<b>You are here</b>");
         {% endif %}
 
         {% for job in jobs %}
             {% if job.latitude and job.longitude %}
                 L.marker([{{ job.latitude }}, {{ job.longitude }}])
                     .addTo(map)
-                    .bindPopup("<b>{{ job.title }}</b><br>{{ job.location }}<br>${{ job.min_salary }} - ${{ job.max_salary }}");
+                    .bindPopup("<b>{{ job.title }}</b><br>{{ job.location }}<br>${{ job.min_salary }} - ${{ job.max_salary }}{% if job.distance_km %}<br>{{ job.distance_km }} km away{% endif %}");
             {% endif %}
         {% endfor %}
     {% endif %}

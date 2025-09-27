@@ -20,11 +20,12 @@ def index(request):
     max_salary = request.GET.get("max_salary")
     remote = request.GET.get("remote")
     visa = request.GET.get("visa")
-    distance = request.GET.get("distance")
+    distance_filter = request.GET.get("distance")
     user_lat = request.GET.get("lat")
     user_lon = request.GET.get("lon")
     view_mode = request.GET.get("view", "list")
 
+    # Apply normal filters
     if title:
         jobs = jobs.filter(title__icontains=title)
     if selected_skills:
@@ -42,30 +43,43 @@ def index(request):
         jobs = jobs.filter(visa_sponsorship=(visa == "yes"))
 
     job_list = []
-    if user_lat and user_lon:
-        try:
+    print(user_lat, user_lon, "asdf")
+    try:
+        if user_lat and user_lon:
             user_lat = float(user_lat)
             user_lon = float(user_lon)
+
             for job in jobs:
-                job.distance_km = None
                 if job.latitude and job.longitude:
-                    job.distance_km = round(haversine(user_lat, user_lon, job.latitude, job.longitude), 2)
+                    dist = haversine(user_lat, user_lon, job.latitude, job.longitude)
+                    job.distance_km = round(dist, 2)
+                else:
+                    job.distance_km = None
                 job_list.append(job)
 
-            # Apply distance filter if specified
-            if distance:
-                distance = float(distance)
-                job_list = [job for job in job_list if job.distance_km and job.distance_km <= distance]
-        except ValueError:
-            job_list = list(jobs)
-    else:
-        job_list = list(jobs)
+            # Apply distance filter
+            if distance_filter:
+                max_dist = float(distance_filter)
+                job_list = [job for job in job_list if job.distance_km and job.distance_km <= max_dist]
+        else:
+            # No user location → just set distance None
+            for job in jobs:
+                job.distance_km = None
+                job_list.append(job)
+    except ValueError:
+        # Bad inputs → just return jobs without distance
+        for job in jobs:
+            job.distance_km = None
+            job_list.append(job)
+
+    for job in job_list:
+        print(job.longitude, job.latitude, job.distance_km)
 
     return render(request, "home/index.html", {
         "jobs": job_list,
         "all_skills": all_skills,
         "selected_skills": selected_skills,
-        "distance": distance,
+        "distance": distance_filter,
         "view_mode": view_mode,
         "user_lat": user_lat,
         "user_lon": user_lon,
