@@ -1,18 +1,12 @@
 from django.contrib import admin
-from .models import JobPost
-# Register your models here.
+from .models import JobPost, Skill
+
 @admin.register(JobPost)
-class JobPostAdmin(admin.ModelAdmin) :
-    list_display = ("title", "created_by", "approved", "created_at")
-    list_filter = ("approved", "created_at")
-    search_fields = ("title", "description")
+class JobPostAdmin(admin.ModelAdmin):
+    list_display = ("title", "location", "min_salary", "max_salary", "remote", "visa_sponsorship")
+    search_fields = ("title", "location", "description")
+    list_filter = ("remote", "visa_sponsorship", "skills")
 
-    actions = ["approve_posts", "reject_posts"]
-
-    def approve_posts(self, request, queryset):
-        queryset.update(approved=True)
-    approve_posts.short_description = "Approve selected job posts"
-
-    def reject_posts(self, request, queryset):
-        queryset.update(approved=False)
-    reject_posts.short_description = "Reject selected job posts"
+@admin.register(Skill)
+class SkillAdmin(admin.ModelAdmin):
+    search_fields = ("name",)

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Candidate Search</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Search Candidates</h1>
+    <a class="btn btn-outline-secondary" href="{% url 'accounts:recruiter_dashboard' %}">Back</a>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-md-5">
+          <label class="form-label">Skills</label>
+          {{ form.skills }}
+          <small class="text-muted d-block">Hold Cmd/Ctrl to select multiple.</small>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Location contains</label>
+          {{ form.location_contains }}
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Projects/Bio contains</label>
+          {{ form.projects_contains }}
+        </div>
+        <div class="col-12 text-end">
+          <button class="btn btn-primary">Search</button>
+          <a class="btn btn-outline-secondary" href="{% url 'accounts:candidate_search' %}">Reset</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if results %}
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+      {% for c in results %}
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title mb-1">{{ c.user.username }}</h5>
+            <div class="text-muted mb-2">{{ c.location }}</div>
+            {% if c.skills.all %}
+              <div class="mb-2">
+                {% for s in c.skills.all %}
+                  <span class="badge text-bg-light border">{{ s.name }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            {% if c.projects %}
+              <p class="mb-0">{{ c.projects|truncatechars:220 }}</p>
+            {% elif c.bio %}
+              <p class="mb-0">{{ c.bio|truncatechars:220 }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% elif request.GET %}
+    <p class="text-muted">No candidates matched your filters.</p>
+  {% endif %}
+</div>
+</body>
+</html>
