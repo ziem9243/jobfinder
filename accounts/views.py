@@ -7,8 +7,8 @@ from django.contrib import messages
 from django.db.models import Q
 
 from .forms import RegisterForm, JobPostForm, CandidateSearchForm
-from .models import User, CandidateProfile
-from home.models import JobPost
+from .models import User
+from home.models import JobPost, Profile   # ✅ import Profile from home.models
 
 
 def register(request):
@@ -17,7 +17,11 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            # Redirect by role after auto-login
+
+            # 🔑 ensure seekers always have a Profile
+            if user.role == User.SEEKER:
+                Profile.objects.get_or_create(user=user)
+
             return redirect("home:index") if user.role == User.SEEKER else redirect("accounts:recruiter_dashboard")
     else:
         form = RegisterForm()
@@ -29,7 +33,6 @@ class RoleLoginView(LoginView):
 
     def get_success_url(self):
         user = self.request.user
-        # Respect ?next= if present
         next_url = self.get_redirect_url()
         if next_url:
             return next_url
@@ -37,7 +40,6 @@ class RoleLoginView(LoginView):
 
 
 class RoleLogoutView(LogoutView):
-    # We keep logout as POST-only (recommended). Use the small POST form in templates.
     next_page = reverse_lazy("home:index")
 
 
@@ -47,7 +49,6 @@ def is_recruiter(user):
 
 @user_passes_test(is_recruiter)
 def recruiter_welcome(request):
-    # You can keep this simple page, but we primarily use the dashboard below.
     return render(request, "accounts/recruiter_welcome.html")
 
 
@@ -98,25 +99,34 @@ def job_edit(request, pk):
 @user_passes_test(is_recruiter)
 def candidate_search(request):
     form = CandidateSearchForm(request.GET or None)
-    results = []
+    results = Profile.objects.none()
+
     if form.is_valid():
-        qs = CandidateProfile.objects.select_related("user").prefetch_related("skills").all()
+        qs = Profile.objects.select_related("user").prefetch_related("skills")
+
+        # Only seekers
+        qs = qs.filter(user__role=User.SEEKER)
+
         skills = form.cleaned_data.get("skills")
         location_contains = form.cleaned_data.get("location_contains") or ""
         projects_contains = form.cleaned_data.get("projects_contains") or ""
 
         if skills and skills.exists():
-            for skill in skills:
-                qs = qs.filter(skills=skill)
+            qs = qs.filter(skills__in=skills).distinct()
+
         if location_contains:
             qs = qs.filter(location__icontains=location_contains)
+
         if projects_contains:
             qs = qs.filter(
-                Q(projects__icontains=projects_contains) | Q(bio__icontains=projects_contains)
+                Q(work_experience__icontains=projects_contains) |  # ✅ changed from projects to work_experience
+                Q(education__icontains=projects_contains) |
+                Q(headline__icontains=projects_contains)
             )
 
-        # Only seekers show up in search
-        qs = qs.filter(user__role=User.SEEKER)
         results = qs.order_by("user__username")
 
-    return render(request, "accounts/candidate_search.html", {"form": form, "results": results})
+    return render(request, "accounts/candidate_search.html", {
+        "form": form,
+        "results": results
+    })

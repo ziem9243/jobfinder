@@ -16,14 +16,19 @@ class User(AbstractUser):
         return f"{self.username} ({self.get_role_display()})"
 
 
-
 class CandidateProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="candidate_profile")
     location = models.CharField(max_length=200, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
+
+    headline = models.CharField(max_length=255, blank=True)   # new
+    education = models.TextField(blank=True)                  # new
+    work_experience = models.TextField(blank=True)            # new
+    links = models.TextField(blank=True)                      # new
+
     bio = models.TextField(blank=True)
-    projects = models.TextField(blank=True)  # freeform text candidates can describe projects
+    projects = models.TextField(blank=True)
     skills = models.ManyToManyField(Skill, blank=True, related_name="candidates")
 
     def __str__(self):

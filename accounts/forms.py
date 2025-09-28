@@ -1,8 +1,22 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User
-from home.models import JobPost, Skill
+from home.models import JobPost, Skill, Profile
 
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["headline", "skills", "education", "work_experience", "links", "location"]  # ✅ added location
+        widgets = {
+            "headline": forms.TextInput(attrs={"class": "form-control"}),
+            "skills": forms.SelectMultiple(attrs={"class": "form-select"}),
+            "education": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "work_experience": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "links": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
+            "location": forms.TextInput(attrs={"class": "form-control"}),  # ✅ location input
+        }
 class RegisterForm(UserCreationForm):
     role = forms.ChoiceField(
         choices=User.ROLE_CHOICES,
@@ -44,14 +58,16 @@ class JobPostForm(forms.ModelForm):
 
 class CandidateSearchForm(forms.Form):
     skills = forms.ModelMultipleChoiceField(
-        queryset=Skill.objects.all(), required=False,
+        queryset=Skill.objects.all(),
+        required=False,
         widget=forms.SelectMultiple(attrs={"class": "form-select"})
     )
     location_contains = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "e.g., Atlanta"})
+        widget=forms.TextInput(attrs={"class": "form-control"})
     )
-    projects_contains = forms.CharField(
+    projects_contains = forms.CharField(   # still named projects_contains for compatibility
         required=False,
-        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "keywords in projects"})
+        label="Projects/Experience contains",  # ✅ updated label
+        widget=forms.TextInput(attrs={"class": "form-control"})
     )

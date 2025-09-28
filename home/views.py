@@ -1,14 +1,19 @@
 from math import radians, sin, cos, sqrt, atan2
-from django.shortcuts import render
-from .models import JobPost, Skill
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+
+from accounts.forms import ProfileForm
+from .models import JobPost, Skill, Application, Profile
+from django.contrib.auth.decorators import login_required
 
 def haversine(lat1, lon1, lat2, lon2):
-    R = 6371  # Earth radius in km
+    R = 6371
     dlat = radians(lat2 - lat1)
     dlon = radians(lon2 - lon1)
     a = sin(dlat/2)**2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon/2)**2
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    return R * c  # km
+    return R * c
+
 def index(request):
     jobs = JobPost.objects.all()
     all_skills = Skill.objects.all()
@@ -25,7 +30,6 @@ def index(request):
     user_lon = request.GET.get("lon")
     view_mode = request.GET.get("view", "list")
 
-    # Apply normal filters
     if title:
         jobs = jobs.filter(title__icontains=title)
     if selected_skills:
@@ -43,12 +47,10 @@ def index(request):
         jobs = jobs.filter(visa_sponsorship=(visa == "yes"))
 
     job_list = []
-    print(user_lat, user_lon, "asdf")
     try:
         if user_lat and user_lon:
             user_lat = float(user_lat)
             user_lon = float(user_lon)
-
             for job in jobs:
                 if job.latitude and job.longitude:
                     dist = haversine(user_lat, user_lon, job.latitude, job.longitude)
@@ -56,24 +58,17 @@ def index(request):
                 else:
                     job.distance_km = None
                 job_list.append(job)
-
-            # Apply distance filter
             if distance_filter:
                 max_dist = float(distance_filter)
                 job_list = [job for job in job_list if job.distance_km and job.distance_km <= max_dist]
         else:
-            # No user location → just set distance None
             for job in jobs:
                 job.distance_km = None
                 job_list.append(job)
     except ValueError:
-        # Bad inputs → just return jobs without distance
         for job in jobs:
             job.distance_km = None
             job_list.append(job)
-
-    for job in job_list:
-        print(job.longitude, job.latitude, job.distance_km)
 
     return render(request, "home/index.html", {
         "jobs": job_list,
@@ -84,3 +79,34 @@ def index(request):
         "user_lat": user_lat,
         "user_lon": user_lon,
     })
+
+
+def apply_job(request, job_id):
+    job = get_object_or_404(JobPost, id=job_id)
+
+    if request.method == "POST":
+        note = request.POST.get("note", "")
+        applicant = request.user if request.user.is_authenticated else None
+        Application.objects.create(
+            job=job,
+            applicant=applicant,
+            note=note
+        )
+        messages.success(request, f"Applied to {job.title} successfully!")
+        return redirect("home:index")
+
+    return redirect("home:index")
+
+
+@login_required
+def profile_view(request):
+    profile, created = Profile.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully.")
+            return redirect("home:profile")
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, "home/profile.html", {"form": form})

@@ -11,6 +11,7 @@
     <a class="btn btn-outline-secondary" href="{% url 'accounts:recruiter_dashboard' %}">Back</a>
   </div>
 
+  <!-- Search Form -->
   <div class="card shadow-sm mb-4">
     <div class="card-body">
       <form method="get" class="row g-3">
@@ -24,7 +25,7 @@
           {{ form.location_contains }}
         </div>
         <div class="col-md-4">
-          <label class="form-label">Projects/Bio contains</label>
+          <label class="form-label">Projects/Experience contains</label>
           {{ form.projects_contains }}
         </div>
         <div class="col-12 text-end">
@@ -35,25 +36,42 @@
     </div>
   </div>
 
+  <!-- Results -->
   {% if results %}
     <div class="row row-cols-1 row-cols-md-2 g-3">
-      {% for c in results %}
+      {% for p in results %}
       <div class="col">
         <div class="card h-100 shadow-sm">
           <div class="card-body">
-            <h5 class="card-title mb-1">{{ c.user.username }}</h5>
-            <div class="text-muted mb-2">{{ c.location }}</div>
-            {% if c.skills.all %}
+            <!-- Username & Headline -->
+            <h5 class="card-title mb-1">{{ p.user.username }}</h5>
+            <p class="text-muted mb-1"><em>{{ p.headline|default:"No headline" }}</em></p>
+
+            <!-- Location -->
+            <div class="text-muted mb-2">{{ p.location|default:"No location" }}</div>
+
+            <!-- Skills -->
+            {% if p.skills.all %}
               <div class="mb-2">
-                {% for s in c.skills.all %}
+                {% for s in p.skills.all %}
                   <span class="badge text-bg-light border">{{ s.name }}</span>
                 {% endfor %}
               </div>
             {% endif %}
-            {% if c.projects %}
-              <p class="mb-0">{{ c.projects|truncatechars:220 }}</p>
-            {% elif c.bio %}
-              <p class="mb-0">{{ c.bio|truncatechars:220 }}</p>
+
+            <!-- Education -->
+            {% if p.education %}
+              <p><strong>Education:</strong> {{ p.education|truncatechars:120 }}</p>
+            {% endif %}
+
+            <!-- Work Experience -->
+            {% if p.work_experience %}
+              <p><strong>Experience:</strong> {{ p.work_experience|truncatechars:160 }}</p>
+            {% endif %}
+
+            <!-- Links -->
+            {% if p.links %}
+              <p><strong>Links:</strong> {{ p.links|linebreaksbr }}</p>
             {% endif %}
           </div>
         </div>
