@@ -6,7 +6,8 @@ SECRET_KEY = 'django-insecure-_9)!viqfd3+=&u@+t0cf-#2l4g@xzy^(_6ijb0q_+ymf+(t4zi
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["kzina6.pythonanywhere.com"]  # <-- your PA domain
+CSRF_TRUSTED_ORIGINS = ["https://kzina6.pythonanywhere.com"]
 
 
 # Application definition
