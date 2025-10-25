@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Messages</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Messages</h1>
+    <div class="d-flex gap-2">
+      {% if user.role == 'recruiter' %}
+        <a class="btn btn-outline-primary" href="{% url 'accounts:candidate_search' %}">Search Candidates</a>
+      {% endif %}
+      <a class="btn btn-outline-secondary" href="{% url 'accounts:recruiter_dashboard' %}">Dashboard</a>
+      <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-secondary">Log out</button>
+      </form>
+    </div>
+  </div>
+
+  {% if conversations %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3">Your Conversations</h5>
+        <div class="list-group">
+          {% for conversation in conversations %}
+            <a href="{% url 'accounts:conversation_detail' conversation.id %}" 
+               class="list-group-item list-group-item-action d-flex justify-content-between align-items-start">
+              <div class="ms-2 me-auto">
+                <div class="fw-bold">
+                  {% if user.role == 'recruiter' %}
+                    {{ conversation.candidate.username }}
+                  {% else %}
+                    {{ conversation.recruiter.username }}
+                  {% endif %}
+                  {% if conversation.unread_count > 0 %}
+                    <span class="badge bg-primary rounded-pill">{{ conversation.unread_count }}</span>
+                  {% endif %}
+                </div>
+                <div class="text-muted">{{ conversation.subject }}</div>
+                {% if conversation.latest_message %}
+                  <small class="text-muted">
+                    {{ conversation.latest_message.content|truncatechars:50 }}
+                  </small>
+                {% endif %}
+              </div>
+              <small class="text-muted">
+                {% if conversation.latest_message %}
+                  {{ conversation.latest_message.created_at|date:"M d, Y" }}
+                {% else %}
+                  {{ conversation.created_at|date:"M d, Y" }}
+                {% endif %}
+              </small>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="card shadow-sm">
+      <div class="card-body text-center py-5">
+        <h5 class="text-muted">No conversations yet</h5>
+        <p class="text-muted mb-0">
+          {% if user.role == 'recruiter' %}
+            Start messaging candidates by searching for them and clicking "Message".
+          {% else %}
+            Recruiters will be able to message you when they find your profile.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  {% endif %}
+</div>
+</body>
+</html>

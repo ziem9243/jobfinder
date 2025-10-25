@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Saved Searches - JobFinder</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">Saved Searches</h1>
+    <div class="d-flex gap-2">
+      <a class="btn btn-primary" href="{% url 'accounts:create_saved_search' %}">
+        <i class="fas fa-plus me-2"></i>Create New Search
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'accounts:recruiter_dashboard' %}">Dashboard</a>
+      <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-secondary">Log out</button>
+      </form>
+    </div>
+  </div>
+
+  {% if searches %}
+    <div class="row">
+      {% for search in searches %}
+        <div class="col-md-6 mb-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="card-title">{{ search.name }}</h5>
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'accounts:saved_search_results' search.id %}">
+                      <i class="fas fa-search me-2"></i>View Results
+                    </a></li>
+                    <li><a class="dropdown-item" href="{% url 'accounts:edit_saved_search' search.id %}">
+                      <i class="fas fa-edit me-2"></i>Edit
+                    </a></li>
+                    <li><a class="dropdown-item text-danger" href="{% url 'accounts:delete_saved_search' search.id %}">
+                      <i class="fas fa-trash me-2"></i>Delete
+                    </a></li>
+                  </ul>
+                </div>
+              </div>
+              
+              {% if search.description %}
+                <p class="card-text text-muted">{{ search.description }}</p>
+              {% endif %}
+              
+              <div class="mb-3">
+                <h6 class="text-muted mb-2">Search Criteria:</h6>
+                <ul class="list-unstyled small">
+                  {% if search.skills.exists %}
+                    <li><strong>Skills:</strong> 
+                      {% for skill in search.skills.all %}
+                        <span class="badge bg-primary me-1">{{ skill.name }}</span>
+                      {% endfor %}
+                    </li>
+                  {% endif %}
+                  {% if search.location %}
+                    <li><strong>Location:</strong> {{ search.location }}</li>
+                  {% endif %}
+                  {% if search.headline_keywords %}
+                    <li><strong>Headline Keywords:</strong> {{ search.headline_keywords }}</li>
+                  {% endif %}
+                  {% if search.education_keywords %}
+                    <li><strong>Education Keywords:</strong> {{ search.education_keywords }}</li>
+                  {% endif %}
+                  {% if search.experience_keywords %}
+                    <li><strong>Experience Keywords:</strong> {{ search.experience_keywords }}</li>
+                  {% endif %}
+                </ul>
+              </div>
+              
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="small text-muted">
+                  <i class="fas fa-clock me-1"></i>
+                  Updated {{ search.updated_at|date:"M d, Y" }}
+                </div>
+                <div>
+                  {% if search.is_active %}
+                    <span class="badge bg-success">Active</span>
+                  {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                  {% if search.notify_on_new_matches %}
+                    <span class="badge bg-info">Notifications On</span>
+                  {% endif %}
+                </div>
+              </div>
+              
+              <div class="mt-3">
+                <a href="{% url 'accounts:saved_search_results' search.id %}" class="btn btn-primary btn-sm">
+                  <i class="fas fa-search me-1"></i>View Results
+                </a>
+                <a href="{% url 'accounts:edit_saved_search' search.id %}" class="btn btn-outline-secondary btn-sm">
+                  <i class="fas fa-edit me-1"></i>Edit
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-search fa-3x text-muted mb-3"></i>
+      <h3 class="text-muted">No Saved Searches</h3>
+      <p class="text-muted">Create your first saved search to get notified about new candidates.</p>
+      <a href="{% url 'accounts:create_saved_search' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Create Saved Search
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

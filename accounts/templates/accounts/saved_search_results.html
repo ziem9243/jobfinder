@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ search.name }} Results - JobFinder</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mb-0">{{ search.name }}</h1>
+      {% if search.description %}
+        <p class="text-muted mb-0">{{ search.description }}</p>
+      {% endif %}
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'accounts:edit_saved_search' search.id %}">
+        <i class="fas fa-edit me-2"></i>Edit Search
+      </a>
+      <a class="btn btn-outline-secondary" href="{% url 'accounts:saved_searches' %}">Back to Searches</a>
+      <a class="btn btn-outline-secondary" href="{% url 'accounts:recruiter_dashboard' %}">Dashboard</a>
+      <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-secondary">Log out</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Search Criteria Summary -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <h5 class="card-title">Search Criteria</h5>
+      <div class="row">
+        {% if search.skills.exists %}
+          <div class="col-md-6 mb-2">
+            <strong>Skills:</strong>
+            {% for skill in search.skills.all %}
+              <span class="badge bg-primary me-1">{{ skill.name }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if search.location %}
+          <div class="col-md-6 mb-2">
+            <strong>Location:</strong> {{ search.location }}
+          </div>
+        {% endif %}
+        {% if search.headline_keywords %}
+          <div class="col-md-6 mb-2">
+            <strong>Headline Keywords:</strong> {{ search.headline_keywords }}
+          </div>
+        {% endif %}
+        {% if search.education_keywords %}
+          <div class="col-md-6 mb-2">
+            <strong>Education Keywords:</strong> {{ search.education_keywords }}
+          </div>
+        {% endif %}
+        {% if search.experience_keywords %}
+          <div class="col-md-6 mb-2">
+            <strong>Experience Keywords:</strong> {{ search.experience_keywords }}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Matching Candidates ({{ candidates.count }})</h3>
+    <div class="d-flex gap-2">
+      <span class="badge bg-info">Last updated: {{ search.updated_at|date:"M d, Y" }}</span>
+      {% if search.notify_on_new_matches %}
+        <span class="badge bg-success">Notifications On</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if candidates %}
+    <div class="row">
+      {% for candidate in candidates %}
+        <div class="col-md-6 mb-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <!-- Candidate Info -->
+              <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                  <h5 class="card-title mb-1">{{ candidate.user.username }}</h5>
+                  {% if candidate.show_headline and candidate.headline %}
+                    <p class="text-muted mb-0"><em>{{ candidate.headline }}</em></p>
+                  {% endif %}
+                </div>
+                <a href="{% url 'accounts:start_conversation' candidate.user.id %}" class="btn btn-success btn-sm">
+                  <i class="fas fa-envelope me-1"></i>Message
+                </a>
+              </div>
+
+              <!-- Location -->
+              {% if candidate.show_location and candidate.location %}
+                <div class="text-muted mb-2">
+                  <i class="fas fa-map-marker-alt me-1"></i>{{ candidate.location }}
+                </div>
+              {% endif %}
+
+              <!-- Skills -->
+              {% if candidate.show_skills and candidate.skills.all %}
+                <div class="mb-3">
+                  <strong class="small">Skills:</strong>
+                  <div class="mt-1">
+                    {% for skill in candidate.skills.all %}
+                      <span class="badge bg-light text-dark border me-1">{{ skill.name }}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+
+              <!-- Education -->
+              {% if candidate.show_education and candidate.education %}
+                <div class="mb-3">
+                  <strong class="small">Education:</strong>
+                  <p class="small mb-0">{{ candidate.education|truncatewords:20 }}</p>
+                </div>
+              {% endif %}
+
+              <!-- Work Experience -->
+              {% if candidate.show_work_experience and candidate.work_experience %}
+                <div class="mb-3">
+                  <strong class="small">Experience:</strong>
+                  <p class="small mb-0">{{ candidate.work_experience|truncatewords:25 }}</p>
+                </div>
+              {% endif %}
+
+              <!-- Links -->
+              {% if candidate.show_links and candidate.links %}
+                <div class="mb-3">
+                  <strong class="small">Links:</strong>
+                  <p class="small mb-0">{{ candidate.links|linebreaksbr }}</p>
+                </div>
+              {% endif %}
+
+              <!-- Profile Updated -->
+              <div class="small text-muted">
+                <i class="fas fa-clock me-1"></i>
+                Profile updated {{ candidate.updated_at|date:"M d, Y" }}
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-users fa-3x text-muted mb-3"></i>
+      <h3 class="text-muted">No Matching Candidates</h3>
+      <p class="text-muted">No candidates match your current search criteria.</p>
+      <a href="{% url 'accounts:edit_saved_search' search.id %}" class="btn btn-primary">
+        <i class="fas fa-edit me-2"></i>Modify Search Criteria
+      </a>
+    </div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

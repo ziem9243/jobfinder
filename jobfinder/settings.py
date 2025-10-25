@@ -6,7 +6,8 @@ SECRET_KEY = 'django-insecure-_9)!viqfd3+=&u@+t0cf-#2l4g@xzy^(_6ijb0q_+ymf+(t4zi
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["kzina6.pythonanywhere.com", "127.0.0.1"]  # <-- your PA domain
+CSRF_TRUSTED_ORIGINS = ["https://kzina6.pythonanywhere.com"]
 
 
 # Application definition
@@ -99,7 +100,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

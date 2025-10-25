@@ -50,6 +50,82 @@
           {{ form.location }}
         </div>
 
+        <div class="col-12">
+          <label class="form-label">Preferred Commute Radius (miles)</label>
+          {{ form.commute_radius_miles }}
+          <small class="text-muted">Set your maximum commute distance. Jobs beyond this radius will be filtered out (except remote jobs).</small>
+        </div>
+
+        <!-- Privacy Settings -->
+        <div class="col-12">
+          <hr>
+          <h5 class="mb-3">Privacy Settings</h5>
+          <p class="text-muted mb-3">Control what recruiters can see in your profile</p>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.profile_visible }}
+            <label class="form-check-label" for="{{ form.profile_visible.id_for_label }}">
+              {{ form.profile_visible.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.show_headline }}
+            <label class="form-check-label" for="{{ form.show_headline.id_for_label }}">
+              {{ form.show_headline.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.show_skills }}
+            <label class="form-check-label" for="{{ form.show_skills.id_for_label }}">
+              {{ form.show_skills.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.show_education }}
+            <label class="form-check-label" for="{{ form.show_education.id_for_label }}">
+              {{ form.show_education.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.show_work_experience }}
+            <label class="form-check-label" for="{{ form.show_work_experience.id_for_label }}">
+              {{ form.show_work_experience.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.show_links }}
+            <label class="form-check-label" for="{{ form.show_links.id_for_label }}">
+              {{ form.show_links.label }}
+            </label>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="form-check">
+            {{ form.show_location }}
+            <label class="form-check-label" for="{{ form.show_location.id_for_label }}">
+              {{ form.show_location.label }}
+            </label>
+          </div>
+        </div>
+
         <div class="col-12 text-end">
           <button type="submit" class="btn btn-primary">Save</button>
         </div>

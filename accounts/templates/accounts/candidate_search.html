@@ -45,13 +45,17 @@
           <div class="card-body">
             <!-- Username & Headline -->
             <h5 class="card-title mb-1">{{ p.user.username }}</h5>
-            <p class="text-muted mb-1"><em>{{ p.headline|default:"No headline" }}</em></p>
+            {% if p.show_headline %}
+              <p class="text-muted mb-1"><em>{{ p.headline|default:"No headline" }}</em></p>
+            {% endif %}
 
             <!-- Location -->
-            <div class="text-muted mb-2">{{ p.location|default:"No location" }}</div>
+            {% if p.show_location %}
+              <div class="text-muted mb-2">{{ p.location|default:"No location" }}</div>
+            {% endif %}
 
             <!-- Skills -->
-            {% if p.skills.all %}
+            {% if p.show_skills and p.skills.all %}
               <div class="mb-2">
                 {% for s in p.skills.all %}
                   <span class="badge text-bg-light border">{{ s.name }}</span>
@@ -60,19 +64,26 @@
             {% endif %}
 
             <!-- Education -->
-            {% if p.education %}
+            {% if p.show_education and p.education %}
               <p><strong>Education:</strong> {{ p.education|truncatechars:120 }}</p>
             {% endif %}
 
             <!-- Work Experience -->
-            {% if p.work_experience %}
+            {% if p.show_work_experience and p.work_experience %}
               <p><strong>Experience:</strong> {{ p.work_experience|truncatechars:160 }}</p>
             {% endif %}
 
             <!-- Links -->
-            {% if p.links %}
+            {% if p.show_links and p.links %}
               <p><strong>Links:</strong> {{ p.links|linebreaksbr }}</p>
             {% endif %}
+            
+            <!-- Message Button -->
+            <div class="mt-3">
+              <a href="{% url 'accounts:start_conversation' p.user.id %}" class="btn btn-success btn-sm">
+                Message {{ p.user.username }}
+              </a>
+            </div>
           </div>
         </div>
       </div>

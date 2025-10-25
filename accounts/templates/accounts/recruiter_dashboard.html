@@ -11,6 +11,14 @@
     <div class="d-flex gap-2">
       <a class="btn btn-primary" href="{% url 'accounts:job_create' %}">Post a Job</a>
       <a class="btn btn-outline-primary" href="{% url 'accounts:candidate_search' %}">Search Candidates</a>
+      <a class="btn btn-outline-warning" href="{% url 'accounts:saved_searches' %}">Saved Searches</a>
+      <a class="btn btn-outline-info" href="{% url 'accounts:notifications' %}">
+        Notifications
+        {% if notification_count > 0 %}
+          <span class="badge bg-danger ms-1">{{ notification_count }}</span>
+        {% endif %}
+      </a>
+      <a class="btn btn-outline-success" href="{% url 'accounts:conversation_list' %}">Messages</a>
       <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
         {% csrf_token %}
         <button type="submit" class="btn btn-outline-secondary">Log out</button>
@@ -36,6 +44,9 @@
                 <td>{{ job.visa_sponsorship|yesno:"Yes,No" }}</td>
                 <td>{{ job.created_at|date:"Y-m-d" }}</td>
                 <td class="text-end">
+                  <a href="{% url 'accounts:job_candidate_recommendations' job.pk %}" class="btn btn-sm btn-outline-success me-1">
+                    <i class="fas fa-users me-1"></i>Find Candidates
+                  </a>
                   <a href="{% url 'accounts:job_edit' job.pk %}" class="btn btn-sm btn-outline-primary">Edit</a>
                 </td>
               </tr>

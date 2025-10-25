@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Conversation with {{ other_user.username }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="mb-0">Conversation with {{ other_user.username }}</h1>
+      <p class="text-muted mb-0">{{ conversation.subject }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a class="btn btn-outline-primary" href="{% url 'accounts:conversation_list' %}">Back to Messages</a>
+      <a class="btn btn-outline-secondary" href="{% url 'accounts:recruiter_dashboard' %}">Dashboard</a>
+      <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-secondary">Log out</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="mb-3">Messages</h5>
+          
+          {% if message_list %}
+            <div class="messages-container" style="max-height: 500px; overflow-y: auto;">
+              {% for message in message_list %}
+                <div class="message mb-3 {% if message.sender == user %}text-end{% endif %}">
+                  <div class="d-flex {% if message.sender == user %}justify-content-end{% endif %}">
+                    <div class="message-bubble {% if message.sender == user %}bg-primary text-white{% else %}bg-light border{% endif %} p-3 rounded" style="max-width: 70%;">
+                      <div class="message-content">{{ message.content|linebreaks }}</div>
+                      <small class="text-muted {% if message.sender == user %}text-white-50{% endif %}">
+                        {{ message.sender.username }} - {{ message.created_at|date:"M d, Y H:i" }}
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-muted text-center py-4">No messages yet. Start the conversation!</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Send Message Form -->
+      <div class="card shadow-sm mt-3">
+        <div class="card-body">
+          <h6 class="mb-3">Send a Message</h6>
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              {{ form.content }}
+            </div>
+            <button type="submit" class="btn btn-primary">Send Message</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h6 class="mb-3">Conversation Info</h6>
+          <p><strong>With:</strong> {{ other_user.username }}</p>
+          <p><strong>Subject:</strong> {{ conversation.subject }}</p>
+          <p><strong>Started:</strong> {{ conversation.created_at|date:"M d, Y" }}</p>
+          <p><strong>Last Updated:</strong> {{ conversation.updated_at|date:"M d, Y H:i" }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Auto-scroll to bottom of messages
+document.addEventListener('DOMContentLoaded', function() {
+  const messagesContainer = document.querySelector('.messages-container');
+  if (messagesContainer) {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+});
+</script>
+</body>
+</html>

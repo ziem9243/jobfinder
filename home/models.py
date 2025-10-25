@@ -11,6 +11,21 @@ class Profile(models.Model):
     work_experience = models.TextField(blank=True)
     links = models.TextField(blank=True)  # e.g. LinkedIn, GitHub, Portfolio
     location = models.CharField(max_length=200, blank=True)
+    
+    # Commute preferences
+    commute_radius_miles = models.PositiveIntegerField(
+        default=25, 
+        help_text="Preferred commute radius in miles (0 = no limit, remote only)"
+    )
+
+    # Privacy settings
+    show_headline = models.BooleanField(default=True, help_text="Show headline to recruiters")
+    show_skills = models.BooleanField(default=True, help_text="Show skills to recruiters")
+    show_education = models.BooleanField(default=True, help_text="Show education to recruiters")
+    show_work_experience = models.BooleanField(default=True, help_text="Show work experience to recruiters")
+    show_links = models.BooleanField(default=True, help_text="Show links to recruiters")
+    show_location = models.BooleanField(default=True, help_text="Show location to recruiters")
+    profile_visible = models.BooleanField(default=True, help_text="Make profile visible to recruiters in search")
 
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -48,6 +63,20 @@ class JobPost(models.Model):
         return self.title
 
 class Application(models.Model):
+    APPLIED = "applied"
+    REVIEW = "review"
+    INTERVIEW = "interview"
+    OFFER = "offer"
+    CLOSED = "closed"
+    
+    STATUS_CHOICES = [
+        (APPLIED, "Applied"),
+        (REVIEW, "Under Review"),
+        (INTERVIEW, "Interview"),
+        (OFFER, "Offer"),
+        (CLOSED, "Closed"),
+    ]
+    
     job = models.ForeignKey(JobPost, on_delete=models.CASCADE, related_name="applications")
     applicant = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -58,7 +87,9 @@ class Application(models.Model):
     )
     note = models.TextField(blank=True)
     applied_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=APPLIED)
+    status_updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         who = self.applicant.username if self.applicant else "Anonymous"
-        return f"{who} -> {self.job.title}"
+        return f"{who} -> {self.job.title} ({self.get_status_display()})"

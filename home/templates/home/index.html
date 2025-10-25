@@ -22,7 +22,10 @@
     {% if user.role == 'recruiter' %}
       <a class="btn btn-outline-primary btn-sm" href="{% url 'accounts:recruiter_dashboard' %}">Recruiter</a>
     {% elif user.role == 'seeker' %}
+      <a class="btn btn-outline-warning btn-sm" href="{% url 'home:job_recommendations' %}">Recommendations</a>
+      <a class="btn btn-outline-primary btn-sm" href="{% url 'home:my_applications' %}">My Applications</a>
       <a class="btn btn-outline-success btn-sm" href="{% url 'home:profile' %}">My Profile</a>
+      <a class="btn btn-outline-info btn-sm" href="{% url 'accounts:conversation_list' %}">Messages</a>
     {% endif %}
 
     <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
@@ -152,7 +155,13 @@
                 <li><strong>Remote:</strong> {{ job.remote|yesno:"Yes,No" }}</li>
                 <li><strong>Visa Sponsorship:</strong> {{ job.visa_sponsorship|yesno:"Yes,No" }}</li>
                 {% if job.distance_km %}
-                  <li><strong>Distance:</strong> {{ job.distance_km|floatformat:1 }} km</li>
+                  <li><strong>Distance:</strong> 
+                    {{ job.distance_km|floatformat:1 }} km 
+                    {% if job.distance_miles %}({{ job.distance_miles|floatformat:1 }} miles){% endif %}
+                    {% if user_commute_radius and job.distance_miles and job.distance_miles <= user_commute_radius %}
+                      <span class="badge bg-success ms-1">Within your {{ user_commute_radius }} mile radius</span>
+                    {% endif %}
+                  </li>
                 {% endif %}
               </ul>
               <!-- Apply button -->
