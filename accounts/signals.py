@@ -43,3 +43,4 @@ def check_saved_searches_for_new_matches(sender, instance, created, **kwargs):
                 # Update last notified timestamp
                 search.last_notified_at = timezone.now()
                 search.save()
+

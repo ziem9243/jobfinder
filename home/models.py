@@ -11,11 +11,13 @@ class Profile(models.Model):
     work_experience = models.TextField(blank=True)
     links = models.TextField(blank=True)  # e.g. LinkedIn, GitHub, Portfolio
     location = models.CharField(max_length=200, blank=True)
+    latitude = models.FloatField(null=True, blank=True, help_text="User's latitude for location-based job matching")
+    longitude = models.FloatField(null=True, blank=True, help_text="User's longitude for location-based job matching")
     
     # Commute preferences
     commute_radius_miles = models.PositiveIntegerField(
-        default=25, 
-        help_text="Preferred commute radius in miles (0 = no limit, remote only)"
+        default=0, 
+        help_text="Preferred commute radius in miles (0 = no limit)"
     )
 
     # Privacy settings

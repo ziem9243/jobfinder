@@ -10,7 +10,7 @@ class ProfileForm(forms.ModelForm):
         model = Profile
         fields = [
             "headline", "skills", "education", "work_experience", "links", "location",
-            "commute_radius_miles",
+            "latitude", "longitude", "commute_radius_miles",
             "show_headline", "show_skills", "show_education", "show_work_experience", 
             "show_links", "show_location", "profile_visible"
         ]
@@ -21,7 +21,9 @@ class ProfileForm(forms.ModelForm):
             "work_experience": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "links": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
             "location": forms.TextInput(attrs={"class": "form-control"}),
-            "commute_radius_miles": forms.NumberInput(attrs={"class": "form-control", "min": 0, "max": 100}),
+            "latitude": forms.HiddenInput(),
+            "longitude": forms.HiddenInput(),
+            "commute_radius_miles": forms.NumberInput(attrs={"class": "form-control", "min": 0, "max": 100, "placeholder": "0 for no limit"}),
             # Privacy settings widgets
             "show_headline": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "show_skills": forms.CheckboxInput(attrs={"class": "form-check-input"}),

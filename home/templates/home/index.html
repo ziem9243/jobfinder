@@ -106,10 +106,21 @@
 
         <!-- Distance -->
         <div class="col-md-4">
-          <label for="distance" class="form-label">Distance (km)</label>
-          <input type="number" id="distance" name="distance" class="form-control" value="{{ distance }}">
+          <label for="distance" class="form-label">Distance Limit (miles) <span class="text-muted">(Optional)</span></label>
+          <div class="input-group">
+            <input type="number" id="distance" name="distance" class="form-control" value="{{ distance }}" placeholder="Leave blank for no limit" min="1">
+            {% if distance %}
+              <button type="button" class="btn btn-outline-secondary" onclick="clearDistance()" title="Clear distance filter">
+                <i class="fas fa-times"></i>
+              </button>
+            {% endif %}
+          </div>
           <input type="hidden" id="lat" name="lat" value="{{ user_lat|default_if_none:'' }}">
           <input type="hidden" id="lon" name="lon" value="{{ user_lon|default_if_none:'' }}">
+          <small class="text-muted">
+            <i class="fas fa-info-circle me-1"></i>
+            Leave empty to show all jobs regardless of distance. Remote jobs always show.
+          </small>
         </div>
 
         <!-- View Mode -->
@@ -132,7 +143,23 @@
 
   <!-- Results -->
   {% if view_mode == "list" %}
-    <h2 class="mb-3">Results</h2>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">Results</h2>
+      {% if distance_filtering_active %}
+        <div class="badge bg-info">
+          <i class="fas fa-map-marker-alt me-1"></i>
+          Showing jobs within {{ active_distance_filter }} miles
+          {% if user_lat and user_lon %}
+            <small class="ms-1">(+ remote jobs)</small>
+          {% endif %}
+        </div>
+      {% elif user_lat and user_lon %}
+        <div class="badge bg-secondary">
+          <i class="fas fa-globe me-1"></i>
+          Showing all jobs (no distance limit)
+        </div>
+      {% endif %}
+    </div>
     <div class="row">
       {% for job in jobs %}
         <div class="col-md-6 mb-4">
@@ -213,6 +240,13 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+// Function to clear distance filter
+function clearDistance() {
+  document.getElementById("distance").value = "";
+  // Automatically submit the form to refresh results
+  document.querySelector("form").submit();
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   const form = document.querySelector("form");
 

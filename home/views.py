@@ -30,12 +30,16 @@ def index(request):
     user_lon = request.GET.get("lon")
     view_mode = request.GET.get("view", "list")
     
-    # Get user's commute radius if logged in
+    # Get user's commute radius and location if logged in
     user_commute_radius = None
+    profile_lat = None
+    profile_lon = None
     if request.user.is_authenticated:
         try:
             profile = Profile.objects.get(user=request.user)
             user_commute_radius = profile.commute_radius_miles
+            profile_lat = profile.latitude
+            profile_lon = profile.longitude
         except Profile.DoesNotExist:
             pass
 
@@ -57,12 +61,21 @@ def index(request):
 
     job_list = []
     try:
+        # Use manual location if provided, otherwise use profile location
+        effective_lat = None
+        effective_lon = None
+        
         if user_lat and user_lon:
-            user_lat = float(user_lat)
-            user_lon = float(user_lon)
+            effective_lat = float(user_lat)
+            effective_lon = float(user_lon)
+        elif profile_lat and profile_lon:
+            effective_lat = profile_lat
+            effective_lon = profile_lon
+            
+        if effective_lat and effective_lon:
             for job in jobs:
                 if job.latitude and job.longitude:
-                    dist = haversine(user_lat, user_lon, job.latitude, job.longitude)
+                    dist = haversine(effective_lat, effective_lon, job.latitude, job.longitude)
                     job.distance_km = round(dist, 2)
                     job.distance_miles = round(dist * 0.621371, 2)  # Convert km to miles
                 else:
@@ -70,19 +83,29 @@ def index(request):
                     job.distance_miles = None
                 job_list.append(job)
             
-            # Apply distance filtering
-            max_distance_km = None
-            if distance_filter:
-                # Use manual distance filter if provided
-                max_distance_km = float(distance_filter)
-            elif user_commute_radius is not None and user_commute_radius > 0:
-                # Use user's commute radius (convert miles to km)
-                max_distance_km = user_commute_radius * 1.60934
+            # Apply distance filtering (optional)
+            max_distance_miles = None
+            distance_filtering_active = False
             
-            if max_distance_km is not None:
-                # Filter jobs by distance, but always include remote jobs
+            # Check if user explicitly set a distance filter
+            if distance_filter and distance_filter.strip():
+                try:
+                    max_distance_miles = float(distance_filter)
+                    distance_filtering_active = True
+                except ValueError:
+                    # If distance_filter is not a valid number, ignore it
+                    pass
+            
+            # If no manual distance filter, check user's profile commute radius
+            elif user_commute_radius is not None and user_commute_radius > 0:
+                max_distance_miles = user_commute_radius
+                distance_filtering_active = True
+            
+            # Apply distance filtering only if explicitly requested
+            if distance_filtering_active and max_distance_miles is not None:
+                # Filter jobs by distance (compare in miles), but always include remote jobs
                 job_list = [job for job in job_list if 
-                           (job.distance_km and job.distance_km <= max_distance_km) or 
+                           (job.distance_miles and job.distance_miles <= max_distance_miles) or 
                            job.remote]
         else:
             for job in jobs:
@@ -95,15 +118,26 @@ def index(request):
             job.distance_miles = None
             job_list.append(job)
 
+    # Use effective coordinates for template context
+    template_lat = effective_lat if 'effective_lat' in locals() else (float(user_lat) if user_lat else None)
+    template_lon = effective_lon if 'effective_lon' in locals() else (float(user_lon) if user_lon else None)
+    
+    # Determine if distance filtering is active for template context
+    active_distance_filter = None
+    if 'distance_filtering_active' in locals() and distance_filtering_active:
+        active_distance_filter = max_distance_miles
+    
     return render(request, "home/index.html", {
         "jobs": job_list,
         "all_skills": all_skills,
         "selected_skills": selected_skills,
         "distance": distance_filter,
         "view_mode": view_mode,
-        "user_lat": user_lat,
-        "user_lon": user_lon,
+        "user_lat": template_lat,
+        "user_lon": template_lon,
         "user_commute_radius": user_commute_radius,
+        "active_distance_filter": active_distance_filter,
+        "distance_filtering_active": locals().get('distance_filtering_active', False),
     })
 
 
@@ -242,16 +276,12 @@ def job_recommendations(request):
         user_commute_radius = profile.commute_radius_miles
         
         if user_commute_radius and user_commute_radius > 0:
-            # Get user's location from profile or request
-            user_lat = getattr(request.user, 'latitude', None)
-            user_lon = getattr(request.user, 'longitude', None)
+            # Get user's location from profile
+            user_lat = profile.latitude
+            user_lon = profile.longitude
             
-            # If no user coordinates, try to get from profile location
-            if not user_lat or not user_lon:
-                # This would need to be enhanced with geocoding in a real app
-                # For now, we'll skip distance filtering if no coordinates
-                pass
-            else:
+            # Only apply distance filtering if user has set their location
+            if user_lat and user_lon:
                 # Calculate distances and filter
                 filtered_jobs = []
                 for job in recommended_jobs:
